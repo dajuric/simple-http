@@ -58,26 +58,6 @@ namespace SimpleHttpRpc
             catch { }
         }
 
-        public static void AddRPC<T>(Func<HttpListenerRequest, T> createObject)
-        {
-            Add($"/{typeof(T).Name}/", async (rq, rp, args) =>
-            {
-                var body = rq.BodyAsString();
-                if (body == null)
-                    throw new InvalidDataException("Form payload not found");
-
-                var obj = createObject(rq);
-                var invoker = new LocalInvoker<T>();
-
-                var responseMsg = await invoker.InvokeAsync(obj, Request.FromJson(body));
-                (obj as IDisposable)?.Dispose();
-
-                rp.AsText(responseMsg.ToJson());
-            },
-            "POST");
-        }
-
-
 
         public static void Add(string pattern, HttpAction action, string method = "GET")
         {

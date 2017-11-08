@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net47</TargetFrameworks>
-    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

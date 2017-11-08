@@ -4,9 +4,9 @@ using System.Net;
 
 namespace SimpleHttpRpc
 {
-    public static class RequestExtensions
+    static partial class RequestExtensions
     {
-        public static string BodyAsString(this HttpListenerRequest request)
+        static string BodyAsString(this HttpListenerRequest request)
         {
             if (!request.HasEntityBody)
                 return null;
@@ -16,20 +16,18 @@ namespace SimpleHttpRpc
             {
                 str = reader.ReadToEnd();
             }
-    
+
             return str;
         }
 
-        public static Dictionary<string, string> FormData(this HttpListenerRequest request)
+        static bool ParseForm(HttpListenerRequest request, Dictionary<string, string> args)
         {
-            var d = new Dictionary<string, string>();
-
             if (request.ContentType != "application/x-www-form-urlencoded")
-                return d;
+                return false;
 
             var str = request.BodyAsString();
             if (str == null)
-                return d;
+                return false;
 
             foreach (var pair in str.Split('&'))
             {
@@ -37,10 +35,10 @@ namespace SimpleHttpRpc
                 if (nameValue.Length != (1 + 1))
                     continue;
 
-                d.Add(nameValue[0], WebUtility.UrlDecode(nameValue[1]));
+                args.Add(nameValue[0], WebUtility.UrlDecode(nameValue[1]));
             }
 
-            return d;
+            return true;
         }
     }
 }
