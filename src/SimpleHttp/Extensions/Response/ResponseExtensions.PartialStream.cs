@@ -18,22 +18,34 @@ namespace SimpleHttp
                 throw new FileNotFoundException(nameof(fileName));
             }
 
-            if (handleETag())
+            if (handleIfCached())
                 return;
 
             var sourceStream = File.OpenRead(fileName);
             fromStream(request, response, sourceStream, MimeTypesMap.GetMimeType(Path.GetExtension(fileName)));
 
-            bool handleETag()
+            bool handleIfCached()
             {
                 var lastModified = File.GetLastWriteTimeUtc(fileName);
                 response.Headers["ETag"] = lastModified.Ticks.ToString("x");
+                response.Headers["Last-Modified"] = lastModified.ToString("R");
 
                 var ifNoneMatch = request.Headers["If-None-Match"];
                 if (ifNoneMatch != null)
                 {
                     var eTags = ifNoneMatch.Split(',').Select(x => x.Trim()).ToArray();
                     if (eTags.Contains(response.Headers["ETag"]))
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotModified;
+                        response.Close();
+                        return true;
+                    }
+                }
+
+                var dateExists = DateTime.TryParse(request.Headers["If-Modified-Since"], out DateTime ifModifiedSince); //only for GET requests
+                if (dateExists)
+                {
+                    if (lastModified <= ifModifiedSince)
                     {
                         response.StatusCode = (int)HttpStatusCode.NotModified;
                         response.Close();
@@ -68,55 +80,48 @@ namespace SimpleHttp
             fromStream(request, response, stream, mime);
         }
 
-
         static void fromStream(HttpListenerRequest request, HttpListenerResponse response, Stream stream, string mime)
         {
+            if (request.Headers.AllKeys.Count(x => x == BYTES_RANGE_HEADER) > 1)
+                throw new NotSupportedException("Multiple 'Range' headers are not supported.");
+
+            int start = 0, end = (int)stream.Length - 1;
+
+            //partial stream response support
+            var rangeStr = request.Headers[BYTES_RANGE_HEADER];
+            if (rangeStr != null)
+            {
+                var range = rangeStr.Replace("bytes=", String.Empty)
+                                    .Split(new string[] { "-" }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(x => Int32.Parse(x))
+                                    .ToArray();
+
+                start = (range.Length > 0) ? range[0] : 0;
+                end = (range.Length > 1) ? range[1] : (int)(stream.Length - 1);
+
+                response.WithHeader("Accept-Ranges", "bytes")
+                        .WithHeader("Content-Range", "bytes " + start + "-" + end + "/" + stream.Length)
+                        .WithCode(HttpStatusCode.PartialContent);
+
+                response.KeepAlive = true;
+            }
+
+            //common properties
+            response.WithContentType(mime);
+            response.ContentLength64 = (end - start + 1);
+
+            //data delivery
             try
             {
-                if (request.Headers.AllKeys.Contains(BYTES_RANGE_HEADER))
-                    fromPartialStream(request, response, stream, mime);
-                else
-                    fromEntireStream(response, stream, mime);
+                copyStream(stream, response.OutputStream, start, end);
             }
-            catch(Exception ex) when (ex is HttpListenerException) //request canceled
+            catch (Exception ex) when (ex is HttpListenerException) //request canceled
             {
                 stream.Close();
                 response.StatusCode = (int)HttpStatusCode.NoContent;
                 response.Close();
             }
         }
-
-        static void fromEntireStream(HttpListenerResponse response, Stream stream, string mime)
-        {
-            response.WithContentType(mime);
-            response.ContentLength64 = stream.Length;
-            copyStream(stream, response.OutputStream);
-        }
-
-        static void fromPartialStream(HttpListenerRequest request, HttpListenerResponse response, Stream stream, string mime)
-        {
-            if (request.Headers.AllKeys.Count(x => x == BYTES_RANGE_HEADER) != 1)
-                throw new NotSupportedException();
-
-            var rangeStr = request.Headers[BYTES_RANGE_HEADER];
-            var range = rangeStr.Replace("bytes=", String.Empty)
-                                .Split(new string[] { "-" }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(x => Int32.Parse(x))
-                                .ToArray();
-
-            var start = (range.Length > 0) ? range[0] : 0;
-            var end = (range.Length > 1) ? range[1] : (int)(stream.Length - 1);
-
-            response.WithContentType(mime)
-                    .WithHeader("Accept-Ranges", "bytes")
-                    .WithHeader("Content-Range", "bytes " + start + "-" + end + "/" + stream.Length)
-                    .WithCode(HttpStatusCode.PartialContent);
-
-            response.KeepAlive = true;
-            response.ContentLength64 = (end - start + 1);
-            copyStream(stream, response.OutputStream, start, end);
-        }
-
 
         static void copyStream(Stream source, Stream destination, long start = 0, long end = -1, int bufferLength = 64 * 1024)
         {
