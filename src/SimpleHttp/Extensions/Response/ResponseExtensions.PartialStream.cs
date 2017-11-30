@@ -4,10 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     public static partial class ResponseExtensions
     {
+        const string BYTES_RANGE_HEADER = "Range";
+
         public static void AsFile(this HttpListenerResponse response, HttpListenerRequest request, string fileName)
         {
             if (!File.Exists(fileName))
@@ -16,8 +18,43 @@ namespace SimpleHttpRpc
                 throw new FileNotFoundException(nameof(fileName));
             }
 
+            if (handleIfCached())
+                return;
+
             var sourceStream = File.OpenRead(fileName);
             fromStream(request, response, sourceStream, MimeTypesMap.GetMimeType(Path.GetExtension(fileName)));
+
+            bool handleIfCached()
+            {
+                var lastModified = File.GetLastWriteTimeUtc(fileName);
+                response.Headers["ETag"] = lastModified.Ticks.ToString("x");
+                response.Headers["Last-Modified"] = lastModified.ToString("R");
+
+                var ifNoneMatch = request.Headers["If-None-Match"];
+                if (ifNoneMatch != null)
+                {
+                    var eTags = ifNoneMatch.Split(',').Select(x => x.Trim()).ToArray();
+                    if (eTags.Contains(response.Headers["ETag"]))
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotModified;
+                        response.Close();
+                        return true;
+                    }
+                }
+
+                var dateExists = DateTime.TryParse(request.Headers["If-Modified-Since"], out DateTime ifModifiedSince);
+                if (dateExists)
+                {
+                    if (lastModified <= ifModifiedSince)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotModified;
+                        response.Close();
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
 
         public static void AsBytes(this HttpListenerResponse response, HttpListenerRequest request, byte[] data, string mime = "octet/stream")
@@ -48,7 +85,7 @@ namespace SimpleHttpRpc
         {
             try
             {
-                if (request.Headers.AllKeys.Contains("Range"))
+                if (request.Headers.AllKeys.Contains(BYTES_RANGE_HEADER))
                     fromPartialStream(request, response, stream, mime);
                 else
                     fromEntireStream(response, stream, mime);
@@ -65,14 +102,11 @@ namespace SimpleHttpRpc
         {
             response.WithContentType(mime);
             response.ContentLength64 = stream.Length;
-
             copyStream(stream, response.OutputStream);
         }
 
         static void fromPartialStream(HttpListenerRequest request, HttpListenerResponse response, Stream stream, string mime)
         {
-            const string BYTES_RANGE_HEADER = "Range";
-
             if (request.Headers.AllKeys.Count(x => x == BYTES_RANGE_HEADER) != 1)
                 throw new NotSupportedException();
 

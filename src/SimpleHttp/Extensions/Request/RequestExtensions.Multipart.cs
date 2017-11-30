@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     static partial class RequestExtensions
     {
@@ -19,11 +19,12 @@ namespace SimpleHttpRpc
 
 
             var files = new Dictionary<string, HttpFile>();
+            var inputStream = new BufferedStream(request.InputStream);
 
-            parseUntillBoundaryEnd(request.InputStream, new MemoryStream(), boundary);
+            parseUntillBoundaryEnd(inputStream, new MemoryStream(), boundary);
             while(true)
             {
-                var (n, v, fn, ct) = parseSection(request.InputStream, "\r\n" + boundary);
+                var (n, v, fn, ct) = parseSection(inputStream, "\r\n" + boundary);
                 if (String.IsNullOrEmpty(n)) break;
 
                 v.Position = 0;

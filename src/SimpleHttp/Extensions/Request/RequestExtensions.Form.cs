@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     static partial class RequestExtensions
     {

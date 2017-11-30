@@ -4,7 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     public static partial class ResponseExtensions
     {
@@ -61,26 +61,6 @@ namespace SimpleHttpRpc
         {
             var data = Encoding.ASCII.GetBytes(txt);
 
-            response.ContentLength64 = data.Length;
-            response.ContentType = mime;
-            response.OutputStream.Write(data, 0, data.Length);
-        }
-
-        public static void AsFile(this HttpListenerResponse response, string filePath)
-        {
-            if (!File.Exists(filePath))
-            {
-                response.StatusCode = (int)HttpStatusCode.NotFound;
-                throw new FileNotFoundException(nameof(filePath));
-            }
-
-            var data = File.ReadAllBytes(filePath);
-            var mime = MimeTypesMap.GetMimeType(Path.GetExtension(filePath));
-            response.AsBytes(data, mime);
-        }
-
-        public static void AsBytes(this HttpListenerResponse response, byte[] data, string mime = "octet/stream")
-        {
             response.ContentLength64 = data.Length;
             response.ContentType = mime;
             response.OutputStream.Write(data, 0, data.Length);

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     public static partial class RequestExtensions
     {

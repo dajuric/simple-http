@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     public static class StringExtensions
     {

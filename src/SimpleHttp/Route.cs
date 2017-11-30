@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text.RegularExpressions;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 
-namespace SimpleHttpRpc
+namespace SimpleHttp
 {
     public delegate bool ShouldProcessFunc(HttpListenerRequest request, Dictionary<string, string> arguments);
 
     public delegate Task HttpActionAsync(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
     public delegate void HttpAction(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
 
-    public static class HttpRPC
+    public delegate void OnError(HttpListenerRequest request, HttpListenerResponse response, Exception exception);
+    public delegate bool OnBefore(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
+
+    public static class Route
     {
         public static readonly List<(ShouldProcessFunc ShouldProcessFunc, HttpActionAsync Action)> Methods;
-        public static Action<HttpListenerRequest, HttpListenerResponse, Exception> Error = null;
+        public static OnBefore Before = null;
+        public static OnError Error = null;
 
-        static HttpRPC()
+        static Route()
         {
             Methods = new List<(ShouldProcessFunc, HttpActionAsync)>();
             Error = (rq, rp, ex) =>
@@ -27,7 +30,7 @@ namespace SimpleHttpRpc
             };
         }
 
-        public static void OnHttpRequest(HttpListenerRequest request, HttpListenerResponse response)
+        public static async Task OnHttpRequestAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             var args = new Dictionary<string, string>();
             foreach (var (shouldProcessFunc, action) in Methods)
@@ -40,20 +43,24 @@ namespace SimpleHttpRpc
 
                 try
                 {
-                    action(request, response, args).Wait();
-                    return;
+                    var isHandled = Before?.Invoke(request, response, args);
+                    if (isHandled.HasValue && (bool)isHandled) return;
+
+                    await action(request, response, args);
                 }
                 catch (Exception ex)
                 {
-                    Error?.Invoke(request, response, ex);
-                    return;
+                    try { Error?.Invoke(request, response, ex); }
+                    catch { }
                 }
+
+                return;
             }
 
             try
             {
                 response.StatusCode = (int)HttpStatusCode.NotFound;
-                Error?.Invoke(request, response, new Exception($"Route {request.Url.PathAndQuery} not found."));
+                Error?.Invoke(request, response, new FileNotFoundException($"Route {request.Url.PathAndQuery} not found.")); //TODO: replace with RouteNotFoundException
             }
             catch { }
         }
@@ -93,7 +100,7 @@ namespace SimpleHttpRpc
         public static void Add(ShouldProcessFunc shouldProcess, HttpAction action)
         {
             Methods.Add((shouldProcess, (rq, rp, args) => 
-            {
+            { 
                 action(rq, rp, args);
                 return Task.FromResult(true);
             }));

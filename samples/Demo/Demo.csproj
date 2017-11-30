@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net47</TargetFramework>
+    <TargetFrameworks>net47;netcoreapp2.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HttpRpc\SimpleHttpRpc.csproj" />
+    <ProjectReference Include="..\..\src\SimpleHttp\SimpleHttp.csproj" />
   </ItemGroup>
 
 </Project>
