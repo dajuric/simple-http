@@ -18,34 +18,22 @@ namespace SimpleHttp
                 throw new FileNotFoundException(nameof(fileName));
             }
 
-            if (handleIfCached())
+            if (handleETag())
                 return;
 
             var sourceStream = File.OpenRead(fileName);
             fromStream(request, response, sourceStream, MimeTypesMap.GetMimeType(Path.GetExtension(fileName)));
 
-            bool handleIfCached()
+            bool handleETag()
             {
                 var lastModified = File.GetLastWriteTimeUtc(fileName);
                 response.Headers["ETag"] = lastModified.Ticks.ToString("x");
-                response.Headers["Last-Modified"] = lastModified.ToString("R");
 
                 var ifNoneMatch = request.Headers["If-None-Match"];
                 if (ifNoneMatch != null)
                 {
                     var eTags = ifNoneMatch.Split(',').Select(x => x.Trim()).ToArray();
                     if (eTags.Contains(response.Headers["ETag"]))
-                    {
-                        response.StatusCode = (int)HttpStatusCode.NotModified;
-                        response.Close();
-                        return true;
-                    }
-                }
-
-                var dateExists = DateTime.TryParse(request.Headers["If-Modified-Since"], out DateTime ifModifiedSince);
-                if (dateExists)
-                {
-                    if (lastModified <= ifModifiedSince)
                     {
                         response.StatusCode = (int)HttpStatusCode.NotModified;
                         response.Close();
