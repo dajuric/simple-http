@@ -9,16 +9,17 @@ namespace SimpleHttp
     public static partial class ResponseExtensions
     {
         const string BYTES_RANGE_HEADER = "Range";
+        const int MAX_BUFFER_SIZE = 8 * 1024 * 1024;
 
         public static void AsFile(this HttpListenerResponse response, HttpListenerRequest request, string fileName)
         {
             if (!File.Exists(fileName))
             {
                 response.WithCode(HttpStatusCode.NotFound);
-                throw new FileNotFoundException(nameof(fileName));
+                throw new FileNotFoundException($"The file '{fileName}' was not found.");
             }
 
-            if (handleIfCached())
+            if (request.Headers[BYTES_RANGE_HEADER]== null && handleIfCached()) //do not cache partial responses
                 return;
 
             var sourceStream = File.OpenRead(fileName);
@@ -113,31 +114,17 @@ namespace SimpleHttp
             //data delivery
             try
             {
-                copyStream(stream, response.OutputStream, start, end);
+                stream.Position = start;
+                stream.CopyTo(response.OutputStream, MAX_BUFFER_SIZE);
             }
             catch (Exception ex) when (ex is HttpListenerException) //request canceled
             {
-                stream.Close();
-                response.StatusCode = (int)HttpStatusCode.NoContent;
-                response.Close();
+                response.StatusCode = (int)HttpStatusCode.NoContent;              
             }
-        }
-
-        static void copyStream(Stream source, Stream destination, long start = 0, long end = -1, int bufferLength = 64 * 1024)
-        {
-            start = Math.Max(0, start);
-            end = (end < 0) ? source.Length: end;
-
-            source.Position = start;
-            var toRead = end - start + 1;
-
-            var buffer = new byte[bufferLength];
-            var read = 0;
-
-            while ((read = source.Read(buffer, 0, buffer.Length)) > 0 && toRead > 0)
+            finally
             {
-                destination.Write(buffer, 0, read);
-                toRead -= read;
+                stream.Close();
+                response.Close();
             }
         }
     }

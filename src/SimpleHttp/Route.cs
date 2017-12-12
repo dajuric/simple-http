@@ -25,7 +25,7 @@ namespace SimpleHttp
             Methods = new List<(ShouldProcessFunc, HttpActionAsync)>();
             Error = (rq, rp, ex) =>
             {
-                rp.StatusCode = (int)HttpStatusCode.InternalServerError;
+                rp.StatusCode = (int)HttpStatusCode.BadRequest;
                 rp.AsText(ex.Message);
             };
         }
