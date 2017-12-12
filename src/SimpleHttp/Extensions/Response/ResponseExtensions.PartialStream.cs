@@ -115,7 +115,7 @@ namespace SimpleHttp
             try
             {
                 stream.Position = start;
-                stream.CopyTo(response.OutputStream, MAX_BUFFER_SIZE);
+                stream.CopyTo(response.OutputStream, Math.Min(MAX_BUFFER_SIZE, end - start + 1));
             }
             catch (Exception ex) when (ex is HttpListenerException) //request canceled
             {
