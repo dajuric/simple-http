@@ -7,9 +7,18 @@ using System.Text.RegularExpressions;
 
 namespace SimpleHttp
 {
+    /// <summary>
+    /// Delegate executed when a file is about to be read from a body stream.
+    /// </summary>
+    /// <param name="fieldName">Field name.</param>
+    /// <param name="fileName">name of the file.</param>
+    /// <param name="contentType">Content type.</param>
+    /// <returns>Stream to be populated.</returns>
+    public delegate Stream OnFile(string fieldName, string fileName, string contentType);
+
     static partial class RequestExtensions
     {
-        static Dictionary<string, HttpFile>ParseMultipartForm(HttpListenerRequest request, Dictionary<string, string> args)
+        static Dictionary<string, HttpFile> ParseMultipartForm(HttpListenerRequest request, Dictionary<string, string> args, OnFile onFile)
         {
             if (request.ContentType.StartsWith("multipart/form-data") == false)
                 throw new InvalidDataException("Not 'multipart/form-data'.");
@@ -24,7 +33,7 @@ namespace SimpleHttp
             parseUntillBoundaryEnd(inputStream, new MemoryStream(), boundary);
             while(true)
             {
-                var (n, v, fn, ct) = parseSection(inputStream, "\r\n" + boundary);
+                var (n, v, fn, ct) = parseSection(inputStream, "\r\n" + boundary, onFile);
                 if (String.IsNullOrEmpty(n)) break;
 
                 v.Position = 0;
@@ -37,16 +46,17 @@ namespace SimpleHttp
             return files;
         }
 
-        private static (string Name, Stream Value, 
-                        string FileName, string ContentType) 
-            parseSection(Stream source, string boundary)
+        private static (string Name, Stream Value, string FileName, string ContentType) parseSection(Stream source, string boundary, OnFile onFile)
         {
             var (n, fn, ct) = readContentDisposition(source);
             source.ReadByte(); source.ReadByte(); //\r\n (empty row)
 
-            var dst = new MemoryStream();
-            parseUntillBoundaryEnd(source, dst, boundary);
+            var dst = String.IsNullOrEmpty(fn) ? new MemoryStream() : onFile(n, fn, ct);
+            if (dst == null)
+                throw new ArgumentException(nameof(onFile), "The on-file callback must return a stream.");
 
+            parseUntillBoundaryEnd(source, dst, boundary);
+         
             return (n, dst, fn, ct);
         }
 
@@ -134,30 +144,80 @@ namespace SimpleHttp
         }
     }
 
-
-    public class HttpFile
+    /// <summary>
+    /// HTTP file data container.
+    /// </summary>
+    public class HttpFile: IDisposable
     {
-        public HttpFile(string fileName, Stream value, string contentType)
+        /// <summary>
+        /// Creates new HTTP file data container.
+        /// </summary>
+        /// <param name="fileName">File name.</param>
+        /// <param name="value">Data.</param>
+        /// <param name="contentType">Content type.</param>
+        internal HttpFile(string fileName, Stream value, string contentType)
         {
             Value = value;
             FileName = fileName;
             ContentType = contentType;
         }
 
+        /// <summary>
+        /// Gets the name of the file.
+        /// </summary>
         public string FileName { get; private set; }
 
+        /// <summary>
+        /// Gets the data.
+        /// <para>If a stream is created <see cref="OnFile"/> it will be closed when this HttpFile object is disposed.</para>
+        /// </summary>
         public Stream Value { get; private set; }
 
+        /// <summary>
+        /// Content type.
+        /// </summary>
         public string ContentType { get; private set; }
 
-        public void Save(string fileName)
+        /// <summary>
+        /// Saves the data into a file.
+        /// <para>Directory path will be auto created if does not exists.</para>
+        /// </summary>
+        /// <param name="fileName">File path with name.</param>
+        /// <param name="overwrite">True to overwrite the existing file, false otherwise.</param>
+        /// <returns>True if the file is saved/overwritten, false otherwise.</returns>
+        public bool Save(string fileName, bool overwrite = false)
         {
+            if (File.Exists(Path.GetFullPath(fileName)))
+                return false;
+
             var dir = Path.GetDirectoryName(Path.GetFullPath(fileName));
             Directory.CreateDirectory(dir);
 
             Value.Position = 0;
             using (var outStream = File.OpenWrite(fileName))
                 Value.CopyTo(outStream);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Disposes the current instance.
+        /// </summary>
+        public void Dispose()
+        {
+            if (Value != null)
+            {
+                Value?.Dispose();
+                Value = null;
+            }
+        }
+
+        /// <summary>
+        /// Disposes the current instance.
+        /// </summary>
+        ~HttpFile()
+        {
+            Dispose();
         }
     }
 }

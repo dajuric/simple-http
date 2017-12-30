@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net47;netcoreapp2.0</TargetFrameworks>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\SimpleHttp\SimpleHttp.csproj" />
+  </ItemGroup>
+
+</Project>

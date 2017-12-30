@@ -4,8 +4,19 @@ using System.Text.RegularExpressions;
 
 namespace SimpleHttp
 {
+    /// <summary>
+    /// Class containing extensions for <see cref="String"/>.
+    /// </summary>
     public static class StringExtensions
     {
+        /// <summary>
+        /// Matches all the expressions inside '{ }' defined in <paramref name="pattern"/> for the <paramref name="query"/> and populates the <paramref name="args"/>.
+        /// <para>Example: query: "Hello world", pattern: "{first} world" => args["first"] is "Hello".</para>
+        /// </summary>
+        /// <param name="query">Query string.</param>
+        /// <param name="pattern">Pattern string defining the expressions to match inside '{ }'.</param>
+        /// <param name="args">Key-value pair collection populated by <paramref name="pattern"/> keys and matches in <paramref name="query"/> if found.</param>
+        /// <returns>True is all defined keys in <paramref name="pattern"/> are matched, false otherwise.</returns>
         public static bool TryMatch(this string query, string pattern, Dictionary<string, string> args)
         {
             var names = new List<string>();
@@ -33,7 +44,7 @@ namespace SimpleHttp
             return true;
         }
 
-        public static string replaceLastOccurrence(string source, string oldStr, string newStr)
+        static string replaceLastOccurrence(string source, string oldStr, string newStr)
         {
             int place = source.LastIndexOf(oldStr);
 

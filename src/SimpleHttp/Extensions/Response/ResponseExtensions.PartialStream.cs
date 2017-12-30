@@ -11,6 +11,15 @@ namespace SimpleHttp
         const string BYTES_RANGE_HEADER = "Range";
         const int MAX_BUFFER_SIZE = 8 * 1024 * 1024;
 
+
+        /// <summary>
+        /// Writes the specified file content to the response.
+        /// <para>Response is closed and can not be longer modified.</para>
+        /// <para>Built-in support for 'byte-range' response, 'ETag' and 'Last-Modified'.</para>
+        /// </summary>
+        /// <param name="response">HTTP response.</param>
+        /// <param name="request">HTTP request used to determine 'Range' header</param>
+        /// <param name="fileName">File path with name.</param>
         public static void AsFile(this HttpListenerResponse response, HttpListenerRequest request, string fileName)
         {
             if (!File.Exists(fileName))
@@ -58,6 +67,14 @@ namespace SimpleHttp
             }
         }
 
+        /// <summary>
+        /// Writes the specified data to the response.
+        /// <para>Response is closed and can not be longer modified.</para>
+        /// </summary>
+        /// <param name="response">HTTP response.</param>
+        /// <param name="request">HTTP request used to determine 'Range' header</param>
+        /// <param name="data">Data to write.</param>
+        /// <param name="mime">Mime type.</param>
         public static void AsBytes(this HttpListenerResponse response, HttpListenerRequest request, byte[] data, string mime = "octet/stream")
         {
             if (data == null)
@@ -70,6 +87,17 @@ namespace SimpleHttp
             fromStream(request, response, sourceStream, mime);
         }
 
+        /// <summary>
+        /// Writes the specified data to the response.
+        /// <para>Response is closed and can not be longer modified.</para>
+        /// </summary>
+        /// <param name="response">HTTP response.</param>
+        /// <param name="request">HTTP request used to determine 'Range' header</param>
+        /// <param name="stream">
+        /// Data to write.
+        /// <para>Stream must support seek operation due to 'byte-range' functionality.</para>
+        /// </param>
+        /// <param name="mime">Mime type.</param>
         public static void AsStream(this HttpListenerResponse response, HttpListenerRequest request, Stream stream, string mime = "octet/stream")
         {
             if (stream == null)

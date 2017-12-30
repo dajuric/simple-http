@@ -6,20 +6,6 @@ namespace SimpleHttp
 {
     static partial class RequestExtensions
     {
-        static string BodyAsString(this HttpListenerRequest request)
-        {
-            if (!request.HasEntityBody)
-                return null;
-
-            string str = null;
-            using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
-            {
-                str = reader.ReadToEnd();
-            }
-
-            return str;
-        }
-
         static bool ParseForm(HttpListenerRequest request, Dictionary<string, string> args)
         {
             if (request.ContentType != "application/x-www-form-urlencoded")
@@ -39,6 +25,20 @@ namespace SimpleHttp
             }
 
             return true;
+        }
+
+        static string BodyAsString(this HttpListenerRequest request)
+        {
+            if (!request.HasEntityBody)
+                return null;
+
+            string str = null;
+            using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+            {
+                str = reader.ReadToEnd();
+            }
+
+            return str;
         }
     }
 }
