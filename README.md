@@ -7,7 +7,7 @@
 </p>
 
 **SimpleHTTP** - HTTP server for .NET    
-Lightweight HTTP server for .NET written based on *System.Net.HttpListener*. Supports partial file streaming, file caching, simple tempting, single-pass form parsing.
+Lightweight HTTP server for .NET written based on *System.Net.HttpListener*. Supports partial file streaming, file caching (ETag), simple templating, single-pass form parsing (no temp file).
 
 <!--
  > **Tutorial:** <a href="https://www.codeproject.com/Articles/0000/Introducing-SimpleHTTP-library" target="_blank">CodeProject article</a>
@@ -27,7 +27,7 @@ Zero configuration.
  
 ## <a href="Samples/"> Sample</a>
 
-The snippets below demonstrate the most common functionality. For a demonstration of all functionalities check the sample.
+The snippets below demonstrate the most common functionality. For a demonstration of the all functionalities check the sample.
 
  ``` csharp
 //rq - request, rp -response, args - arguments
@@ -63,10 +63,9 @@ Server.ListenAsync(8000, CancellationToken.None, Route.OnHttpRequestAsync)
 {empty} . 
 
 
-
+<!--
 ## Getting started
 + Sample
-<!--
 + <a href="https://www.codeproject.com/Articles/0000/Introducing-SimpleHTTP-library" target="_blank">CodeProject article</a>
 -->
 

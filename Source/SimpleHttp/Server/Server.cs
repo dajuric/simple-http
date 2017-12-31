@@ -25,6 +25,7 @@
 
 using System;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -75,10 +76,8 @@ namespace SimpleHttp
             try { listener.Start(); }
             catch (Exception ex) when ((ex as HttpListenerException)?.ErrorCode == 5)
             {
-                throw new UnauthorizedAccessException($"The HTTP server can not be started, as the namespace reservation does not exist.\n" +
-                                                       $"Please run (elevated): 'netsh http add urlacl url={httpListenerPrefix} user=\"Everyone\"'." +
-                                                       $"\nRemarks:\n" +
-                                                       $"  If using 'localhost', put 'delete' instead of 'add' and type the http prefix instead of 'localhost'.", ex);
+                var msg = getNamespaceReservationExceptionMessage(httpListenerPrefix);
+                throw new UnauthorizedAccessException(msg, ex);
             }
 
             using (var r = token.Register(() => listener.Close()))
@@ -112,5 +111,26 @@ namespace SimpleHttp
             }
         }
 
+        static string getNamespaceReservationExceptionMessage(string httpListenerPrefix)
+        {
+            string msg = null;
+            var m = Regex.Match(httpListenerPrefix, @"(?<protocol>\w+)://localhost:?(?<port>\d*)");
+
+            if (m.Success)
+            {
+                var protocol = m.Groups["protocol"].Value;
+                var port = m.Groups["port"].Value; if (String.IsNullOrEmpty(port)) port = 80.ToString();
+
+                msg = $"The HTTP server can not be started, as the namespace reservation already exists.\n" +
+                      $"Please run (elevated): 'netsh http delete urlacl url={protocol}://+:{port}/'.";
+            }
+            else
+            {
+                msg = $"The HTTP server can not be started, as the namespace reservation does not exist.\n" +
+                      $"Please run (elevated): 'netsh http add urlacl url={httpListenerPrefix} user=\"Everyone\"'.";
+            }
+
+            return msg;
+        }
     }
 }
