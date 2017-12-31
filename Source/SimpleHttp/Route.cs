@@ -1,4 +1,29 @@
-﻿using System;
+﻿#region License
+// Copyright © 2018 Darko Jurić
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -11,11 +36,10 @@ namespace SimpleHttp
     /// <summary>
     /// Delegate which runs before all route-methods and returns if the processing should finish (true) or continue (false).
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="response"></param>
-    /// <param name="arguments"></param>
+    /// <param name="request">HTTP request.</param>
+    /// <param name="response">HTTP response.</param>
     /// <returns>True if the request is handled, false otherwise.</returns>
-    public delegate bool OnBefore(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
+    public delegate bool OnBefore(HttpListenerRequest request, HttpListenerResponse response);
 
     /// <summary>
     /// Delegate which runs before any route-action is invoked to determine which route should be executed.
@@ -33,7 +57,7 @@ namespace SimpleHttp
     /// </summary>
     /// <param name="request">HTTP request.</param>
     /// <param name="response">HTTP response.</param>
-    /// <param name="arguments">Collection of key-value pairs populated by the <see cref="ShouldProcessFunc"/> or <see cref="OnBefore"/>.</param>
+    /// <param name="arguments">Collection of key-value pairs populated by the <see cref="ShouldProcessFunc"/>.</param>
     /// <returns>Action task.</returns>
     public delegate Task HttpActionAsync(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
     /// <summary>
@@ -41,7 +65,7 @@ namespace SimpleHttp
     /// </summary>
     /// <param name="request">HTTP request.</param>
     /// <param name="response">HTTP response.</param>
-    /// <param name="arguments">Collection of key-value pairs populated by the <see cref="ShouldProcessFunc"/> or <see cref="OnBefore"/>.</param>
+    /// <param name="arguments">Collection of key-value pairs populated by the <see cref="ShouldProcessFunc"/>.</param>
     public delegate void HttpAction(HttpListenerRequest request, HttpListenerResponse response, Dictionary<string, string> arguments);
 
     /// <summary>
@@ -72,7 +96,7 @@ namespace SimpleHttp
         static OnError error = null;
         /// <summary>
         /// Action executed if an error occurs.
-        /// <para>By default it outputs exception message as text and the status code set before.</para>
+        /// <para>By default it outputs exception message as text with an existing status code. In case of 200-299, 'BadRequest' is used.</para>
         /// </summary>
         public static OnError Error
         {
@@ -90,10 +114,10 @@ namespace SimpleHttp
             Methods = new List<(ShouldProcessFunc, HttpActionAsync)>();
             Error = (rq, rp, ex) =>
             {
-                if(rp.StatusCode == (int)HttpStatusCode.OK)
+                if(rp.StatusCode >= 200 && rp.StatusCode <= 299)
                     rp.StatusCode = (int)HttpStatusCode.BadRequest;
 
-                rp.AsText(ex.Message);
+                rp.AsText(ex.Message, "text/plain");
             };
         }
 
@@ -105,12 +129,10 @@ namespace SimpleHttp
         /// <returns>Request processing task.</returns>
         public static async Task OnHttpRequestAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
-            var args = new Dictionary<string, string>();
-
             //run the 'before' method
             try
             {
-                var isHandled = Before?.Invoke(request, response, args);
+                var isHandled = Before?.Invoke(request, response);
                 if (isHandled.HasValue && (bool)isHandled) return;
             }
             catch (Exception ex)
@@ -120,6 +142,7 @@ namespace SimpleHttp
             }
 
             //select and run an action
+            var args = new Dictionary<string, string>();
             foreach (var (shouldProcessFunc, action) in Methods)
             {
                 if (shouldProcessFunc(request, args) == false)

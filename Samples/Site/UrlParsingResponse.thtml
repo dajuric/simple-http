@@ -1,0 +1,14 @@
+﻿<html>
+<head>
+    <title>Url parsing response</title>
+</head>
+<body>
+
+   <div>
+		Parsed: <br/> <hr/>		
+		&nbsp; <b>action: </b> {action} <br/>
+		&nbsp; <i>paramA: </i> {paramA} <br/>
+		&nbsp; <i>paramB: </i> {paramB}
+   </div>
+</body>
+</html>

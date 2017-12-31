@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\SimpleHttp\SimpleHttp.csproj" />
+    <ProjectReference Include="..\Source\SimpleHttp\SimpleHttp.csproj" />
   </ItemGroup>
 
 </Project>
