@@ -80,7 +80,7 @@ namespace SimpleHttp
         /// <param name="name">Header name.</param>
         /// <param name="value">Header value.</param>
         /// <returns>Modified HTTP response.</returns>
-        public static HttpListenerResponse WithHeader(this HttpListenerResponse response, string name, string value) //TODO: forbidden headers
+        public static HttpListenerResponse WithHeader(this HttpListenerResponse response, string name, string value)
         {
             if (response == null)
                 throw new ArgumentNullException(nameof(response));
@@ -91,7 +91,28 @@ namespace SimpleHttp
             if (String.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(name));
 
-            response.Headers[name] = value;
+            switch (name)
+            {
+                case "content-length":
+                    Int32.TryParse(value, out int vInt);
+                    response.ContentLength64 = vInt;
+                    break;
+                case "content-type":
+                    response.ContentType = value;
+                    break;
+                case "keep-alive":
+                    Boolean.TryParse(value, out bool vBool);
+                    response.KeepAlive = vBool;
+                    break;
+                case "transfer-encoding":
+                    if (value.Contains("chunked")) throw new ArgumentException(nameof(name), "Use 'SendChunked' property instead.");
+                    else response.Headers[name] = value;
+                    break;
+                default:
+                    response.Headers[name] = value;
+                    break;
+            }
+
             return response;
         }
 

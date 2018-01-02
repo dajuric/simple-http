@@ -78,6 +78,24 @@ namespace SimpleHttp
 
     #endregion
 
+    #region Exceptions
+
+    /// <summary>
+    /// Represents error that occur when a route is not found.
+    /// </summary>
+    public class RouteNotFoundException : Exception
+    {
+        /// <summary>
+        /// Creates a new instance of the route not found exception.
+        /// </summary>
+        /// <param name="route"></param>
+        public RouteNotFoundException(string route)
+            :base($"Route {route} not found.")
+        { }
+    }
+
+    #endregion
+
     /// <summary>
     /// Class defining all the required actions for route-processing and error handling.
     /// /// </summary>
@@ -168,7 +186,7 @@ namespace SimpleHttp
             try
             {
                 response.StatusCode = (int)HttpStatusCode.NotFound;
-                Error?.Invoke(request, response, new FileNotFoundException($"Route {request.Url.PathAndQuery} not found.")); //TODO: replace with RouteNotFoundException
+                Error?.Invoke(request, response, new RouteNotFoundException(request.Url.PathAndQuery));
             }
             catch { }
         }
