@@ -66,7 +66,7 @@ namespace Demo
 
             var cts = new CancellationTokenSource();
             var ts = HttpServer.ListenAsync($"http://localhost:{port}/", cts.Token, Route.OnHttpRequestAsync);
-            AppExit.WaitFor(cts, ts);           
+            AppExit.WaitFor(cts, ts);     
         }
     }
 }
