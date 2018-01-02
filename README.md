@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://www.nuget.org/profiles/dajuric"> <img src="Deploy/Logo/Logo-big.png" alt="SimpleHTTP logo" width="120" align="center"> </a>
+    <a href="https://www.nuget.org/profiles/dajuric"> <img src="Deploy/Logo/logo-big.png" alt="SimpleHTTP logo" width="120" align="center"> </a>
 </p>
 
 <p align="center">
@@ -60,7 +60,6 @@ Route.Add("/myForm/", (rq, rp, args) =>
 Server.ListenAsync(8000, CancellationToken.None, Route.OnHttpRequestAsync)
        .Wait();
  ``` 
-{empty} . 
 
 
 <!--
