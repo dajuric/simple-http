@@ -21,7 +21,7 @@ No dependencies.
 
 + **Simple**   
 There is only one relevant method **Route.Add** which associates a route with an action. 
-Other methods are extensions on *HttpListenerRequest* and *HttpListenerRequest* classes.
+Other methods are extensions on *HttpListenerRequest* and *HttpListenerResponse* classes.
 Zero configuration.
 
  
