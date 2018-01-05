@@ -43,14 +43,15 @@ namespace SimpleHttp
         /// <param name="token">Cancellation token.</param>
         /// <param name="onHttpRequestAsync">Action executed on HTTP request.</param>
         /// <param name="useHttps">True to add 'https://' prefix insteaad of 'http://'.</param>
+        /// <param name="maxHttpConnectionCount">Maximum HTTP connection count, after which the incoming requests will wait (sockets are not included).</param>
         /// <returns>Server listening task.</returns>
-        public static async Task ListenAsync(int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, bool useHttps = false)
+        public static async Task ListenAsync(int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, bool useHttps = false, byte maxHttpConnectionCount = 32)
         {
             if (port < 0 || port > UInt16.MaxValue)
                 throw new NotSupportedException($"The provided port value must in the range: [0..{UInt16.MaxValue}");
-
+          
             var s = useHttps ? "s" : String.Empty;
-            await ListenAsync($"http{s}://+:{port}/", token, onHttpRequestAsync);
+            await ListenAsync($"http{s}://+:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);
         }
 
         /// <summary>
@@ -59,20 +60,26 @@ namespace SimpleHttp
         /// <param name="httpListenerPrefix">The http/https URI listening prefix.</param>
         /// <param name="token">Cancellation token.</param>
         /// <param name="onHttpRequestAsync">Action executed on HTTP request.</param>
+        /// <param name="maxHttpConnectionCount">Maximum HTTP connection count, after which the incoming requests will wait (sockets are not included).</param>
         /// <returns>Server listening task.</returns>
-        public static async Task ListenAsync(string httpListenerPrefix, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync)
+        public static async Task ListenAsync(string httpListenerPrefix, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, byte maxHttpConnectionCount = 32)
         {
+            //--------------------- checks args
             if (token == null)
                 throw new ArgumentNullException(nameof(token), "The provided token must not be null.");
 
             if (onHttpRequestAsync == null)
                 throw new ArgumentNullException(nameof(onHttpRequestAsync), "The provided HTTP request/response action must not be null.");
 
+            if (maxHttpConnectionCount < 1)
+                throw new ArgumentException(nameof(maxHttpConnectionCount), "The value must be greater or equal than 1.");
 
             var listener = new HttpListener();
             try { listener.Prefixes.Add(httpListenerPrefix); }
             catch (Exception ex) { throw new ArgumentException("The provided prefix is not supported. Prefixes have the format: 'http(s)://+:(port)/'", ex); }
 
+
+            //--------------------- start listener
             try { listener.Start(); }
             catch (Exception ex) when ((ex as HttpListenerException)?.ErrorCode == 5)
             {
@@ -80,6 +87,7 @@ namespace SimpleHttp
                 throw new UnauthorizedAccessException(msg, ex);
             }
 
+            using (var s = new SemaphoreSlim(maxHttpConnectionCount))
             using (var r = token.Register(() => listener.Close()))
             {
                 bool shouldStop = false;
@@ -95,7 +103,12 @@ namespace SimpleHttp
                             ctx.Response.Close();
                         }
                         else
-                            Task.Factory.StartNew(() => onHttpRequestAsync(ctx.Request, ctx.Response), TaskCreationOptions.None).Wait(0);
+                        {
+                            await s.WaitAsync();
+                            Task.Factory.StartNew(() => onHttpRequestAsync(ctx.Request, ctx.Response), TaskCreationOptions.None)
+                                        .ContinueWith(t => s.Release())
+                                        .Wait(0);
+                        }
                     }
                     catch (Exception)
                     {
