@@ -29,7 +29,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
     <Version>1.0.0</Version>
-    <PackageOutputPath>../Deploy/Nuget/bin/</PackageOutputPath>
+    <PackageOutputPath>../../Deploy/Nuget/bin/</PackageOutputPath>
 
     <IncludeSource>True</IncludeSource>
     <IncludeSymbols>True</IncludeSymbols>

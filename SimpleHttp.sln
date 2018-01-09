@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleHttp", "Source\SimpleHTTP.csproj", "{1F84F9B8-1FF7-4081-BABC-D96B08C3FC27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleHTTP", "Source\SimpleHTTP\SimpleHTTP.csproj", "{1F84F9B8-1FF7-4081-BABC-D96B08C3FC27}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{DE6ABCD2-D177-4641-AA86-1FEEC19FCA34}"
 EndProject
@@ -33,6 +33,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SSL-scripts", "SSL-scripts", "{76A68E1F-104F-480C-833D-DE2BFD7F76A0}"
+	ProjectSection(SolutionItems) = preProject
+		Source\SSL-scripts\GenerateTestCertificate.ps1 = Source\SSL-scripts\GenerateTestCertificate.ps1
+		Source\SSL-scripts\README.md = Source\SSL-scripts\README.md
+		Source\SSL-scripts\SetSsl.ps1 = Source\SSL-scripts\SetSsl.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +63,7 @@ Global
 		{55B66B7C-1F27-4F07-A059-D3E3A0C16B69} = {A3FA5ED2-AD7E-4C3A-91B1-A8088B45BCCB}
 		{35531966-37BB-4FDF-B983-476E486BB5BB} = {A3FA5ED2-AD7E-4C3A-91B1-A8088B45BCCB}
 		{44CAE868-D835-4A81-AB6C-06BCB82F11E5} = {3AA51C64-9444-48AE-AD61-F0A18EDF55D5}
+		{76A68E1F-104F-480C-833D-DE2BFD7F76A0} = {DE6ABCD2-D177-4641-AA86-1FEEC19FCA34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0D32C7C1-CD2A-4502-BBAD-2A9C8749C57F}

@@ -61,11 +61,11 @@ namespace Demo
 
 
             //------------------- start server -------------------           
-            var port = 8001;
+            var port = 4443;
             Console.WriteLine("Running HTTP server on: " + port);
 
             var cts = new CancellationTokenSource();
-            var ts = HttpServer.ListenAsync($"http://localhost:{port}/", cts.Token, Route.OnHttpRequestAsync);
+            var ts = HttpServer.ListenAsync(port, cts.Token, Route.OnHttpRequestAsync, useHttps: true);
             AppExit.WaitFor(cts, ts);     
         }
     }

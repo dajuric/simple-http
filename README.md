@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://www.nuget.org/profiles/dajuric"> <img src="Deploy/Logo/logo-big.png" alt="SimpleHTTP logo" width="120" align="center"> </a>
+    <img src="Deploy/Logo/Logo-big.png" alt="WebSocketRPC logo" width="120" align="center" />
 </p>
 
 <p align="center">
@@ -9,9 +9,8 @@
 **SimpleHTTP** - HTTP server for .NET    
 Lightweight HTTP server for .NET written based on *System.Net.HttpListener*. Supports partial file streaming, file caching (ETag), simple templating, single-pass form parsing (no temp file).
 
-<!--
- > **Tutorial:** <a href="https://www.codeproject.com/Articles/0000/Introducing-SimpleHTTP-library" target="_blank">CodeProject article</a>
--->
+> **Tutorial:** <a href="https://www.codeproject.com/Articles/1223491/Introducing-Simple-HTTP-Server-for-NET" target="_blank">CodeProject article</a>
+
 
 
 ## Why SimpleHTTP ?
@@ -62,11 +61,9 @@ Server.ListenAsync(8000, CancellationToken.None, Route.OnHttpRequestAsync)
  ``` 
 
 
-<!--
-## Getting started
-+ Sample
-+ <a href="https://www.codeproject.com/Articles/0000/Introducing-SimpleHTTP-library" target="_blank">CodeProject article</a>
--->
+## Related Libraries
+<a href="https://github.com/dajuric/websocket-rpc" target="_blank">WebSocketRPC library</a>
+
 
 ## How to Engage, Contribute and Provide Feedback  
 Remember: Your opinion is important and will define the future roadmap.
