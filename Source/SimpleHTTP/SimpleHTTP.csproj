@@ -18,6 +18,7 @@
   
    <!-- NuGet -->
   <PropertyGroup>
+    <PackageId>Simple-HTTP</PackageId>
     <Authors>Darko Jurić</Authors>
     <Description>Simple HTTP server.</Description>
     <Copyright>Darko Jurić</Copyright>
