@@ -20,16 +20,16 @@
   <PropertyGroup>
     <PackageId>Simple-HTTP</PackageId>
     <Authors>Darko Jurić</Authors>
-    <Description>Simple HTTP server.</Description>
+    <Description>Simple multi-platform HTTP server based on HttpListener.</Description>
     <Copyright>Darko Jurić</Copyright>
     <PackageLicenseUrl>https://raw.githubusercontent.com/dajuric/simple-http/master/LICENSE.md</PackageLicenseUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/dajuric/simple-http/master/Deploy/Logo/logo-small.png</PackageIconUrl>
     <PackageProjectUrl>http://simple-http.net/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dajuric/simple-http/</RepositoryUrl>
-    <PackageTags>HTTP Server; C#; .NET</PackageTags>
+    <PackageTags>HTTP Server; C#; .NET; HttpListener</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <PackageOutputPath>../../Deploy/Nuget/bin/</PackageOutputPath>
 
     <IncludeSource>True</IncludeSource>
