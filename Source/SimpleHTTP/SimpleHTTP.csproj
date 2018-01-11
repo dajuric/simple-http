@@ -29,7 +29,7 @@
     <PackageTags>HTTP Server; C#; .NET</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
-    <Version>1.0.1</Version>
+    <Version>1.0.5</Version>
     <PackageOutputPath>../../Deploy/Nuget/bin/</PackageOutputPath>
 
     <IncludeSource>True</IncludeSource>
