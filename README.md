@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="Deploy/Logo/Logo-big.png" alt="SimpleHTTP logo" width="120" align="center" />
+    <img src="Deploy/Logo/logo-big.png" alt="SimpleHTTP logo" width="120" align="center" />
 </p>
 
 <p align="center">
