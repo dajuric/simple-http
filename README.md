@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    <a href="https://www.nuget.org/packages/SimpleHTTP/"> <img src="https://img.shields.io/badge/SimpleHTTP-v1.x-green.svg?style=flat-square" alt="NuGet packages version"/>  </a>
+    <a href="https://www.nuget.org/packages/Simple-HTTP/"> <img src="https://img.shields.io/badge/SimpleHTTP-v1.x-green.svg?style=flat-square" alt="NuGet packages version"/>  </a>
 </p>
 
 **SimpleHTTP** - HTTP server for .NET    
