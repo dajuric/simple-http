@@ -52,6 +52,8 @@ Route.Add("/myForm/", (rq, rp, args) =>
      //write form-fields
      foreach (var a in args)
         Console.WriteLine(a.Key + " " + a.Value);
+        
+     rp.AsText(String.Empty);
 }, 
 "POST");
 
